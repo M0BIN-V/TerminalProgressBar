@@ -1,54 +1,90 @@
-﻿namespace TerminalProgressBar;
+﻿using TerminalProgressBar.Options;
+using TerminalProgressBar.Options.Bar;
+using TerminalProgressBar.Options.Status;
+
+namespace TerminalProgressBar;
 
 public class ProgressBar
 {
-    #region Properties
-    public int Width { get; init; } = 20;
-    public int Max { get; init; } = 100;
-    public string Title { get; init; } = "";
-    public char RemainingBarChar { get; init; } = '━';
-    public char ElapsedBarBarChar { get; init; } = '━';
-    public char EndElapsedBarChar { get; init; } = '╺';
-    public ConsoleColor ReminingBarColor { get; init; } = ConsoleColor.Red;
-    public ConsoleColor ElapsedBarColor { get; init; } = ConsoleColor.Blue;
-    public ConsoleColor CompleteBarColor { get; init; } = ConsoleColor.Green;
-    #endregion
+    public BarOptions Bar { get; set; } = new();
+    public TitleOptions Title { get; set; } = new();
+    public StatusOptions Status { get; set; } = new();
+
+    public int MaxValue { get; set; } = 100;
 
     public void Show(int value)
     {
-        value = (value * Width) / Max;
+        var convertedValue = (value * Bar.Width) / MaxValue;
 
         Console.SetCursorPosition(0, Console.CursorTop);
-        Console.Write(Title + " ");
 
-        for (int i = 0; i < Width; i++)
+        ShowTitle();
+
+        ShowBar(convertedValue);
+
+        ShowStatus(convertedValue, value);
+    }
+
+    void ShowTitle()
+    {
+        if (Title.IsVisible)
         {
-            if (i >= value)
+            Console.ForegroundColor = Title.Color;
+            Console.Write(Title.Text);
+        }
+    }
+
+    void ShowBar(int convertedValue)
+    {
+        for (int i = 0; i < Bar.Width; i++)
+        {
+            if (i >= convertedValue)
             {
-                Console.ForegroundColor = ReminingBarColor;
-                if (i == value)
+                Console.ForegroundColor = Bar.RemainingBar.Color;
+                if (i == convertedValue)
                 {
-                    Console.Write(EndElapsedBarChar);
+                    Console.Write(Bar.RemainingBar.Start.Char);
                 }
                 else
                 {
-                    Console.Write(ElapsedBarBarChar);
+                    Console.Write(Bar.ElapsedBar.Char);
                 }
             }
             else
             {
-                Console.ForegroundColor = value == Width ? CompleteBarColor : ElapsedBarColor;
+                Console.ForegroundColor = convertedValue == Bar.Width ?
+                    Bar.CompleteBarColor : Bar.ElapsedBar.Color;
 
-                Console.Write(RemainingBarChar);
+                Console.Write(Bar.RemainingBar.Char);
             }
         }
-        Console.ResetColor();
+    }
 
-        Console.Write($" {GetPercent(value)}% ");
+    void ShowStatus(int convertedValue, int value)
+    {
+        if (Status.Percent.IsVisible)
+        {
+            Console.ForegroundColor = Status.Percent.Color;
+            Console.Write($" {GetPercent(convertedValue)}%");
+        }
+
+        if (Status.Separator.IsVisible)
+        {
+            Console.ForegroundColor = Status.Separator.Color;
+            Console.Write(Status.Separator.Display);
+        }
+
+        if (Status.Counter.IsVisible)
+        {
+            Console.ForegroundColor = Status.Counter.Color;
+            Console.Write($"{value}/{MaxValue} ");
+        }
+
+        Console.ResetColor();
     }
 
     int GetPercent(int value)
     {
-        return (value * 100) / Width;
+        return (value * 100) / Bar.Width;
     }
 }
