@@ -6,6 +6,7 @@ namespace TerminalProgressBar;
 
 public class ProgressBar
 {
+    public int Top { get; set; } = 0;
     public BarOptions Bar { get; set; } = new();
     public TitleOptions Title { get; set; } = new();
     public StatusOptions Status { get; set; } = new();
@@ -16,7 +17,7 @@ public class ProgressBar
     {
         var convertedValue = (value * Bar.Width) / MaxValue;
 
-        Console.SetCursorPosition(0, Console.CursorTop);
+        Console.SetCursorPosition(0, Top);
 
         ShowTitle();
 
